@@ -19,6 +19,7 @@
 }
 
 .editItem {
+  overflow: hidden;
   max-width: 49%;
   display: flex;
   align-items: center;
@@ -94,10 +95,8 @@
 
 .nameWrapper{
   flex-grow: 1;
-
-  padding-top: 13px;
+  overflow: hidden;
   padding-left: 15px;
-  padding-bottom: 13px;
   border-radius: 8px;
   margin-bottom: 3px;
   background-color: #f5f5f5;
@@ -106,6 +105,7 @@
   flex-grow: 1;
   width: 100%;
   border: none;
+  padding: 13px 0px;
   outline: none;
   font-size: 14px;
   background-color: #f5f5f5;
@@ -144,7 +144,7 @@
   border-radius: 0px 8px 0px 0px;
   padding: 10px;
   font-weight: bold;
-  background-color: darkseagreen;
+  background-color: #1ec600;
   color: white;
 }
 
@@ -260,5 +260,8 @@ background-color: #ff3c3c;
   .grid {
     width: 100%;
     flex-direction: column;
+  }
+  .card {
+    width: 90%;
   }
 }
