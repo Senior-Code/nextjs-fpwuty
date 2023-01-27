@@ -24,7 +24,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
           }
         });
     } else {
-      return res.status(404);
+      return res.status(404).json({ message: "not found!" });
     }
   } else {
     return res.status(201).json({ Response: "success" });

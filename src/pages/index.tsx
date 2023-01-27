@@ -3,7 +3,6 @@ import { Type } from "src/types/dataType";
 import useSWR from "swr";
 import { useMutation } from "src/lib/mutation";
 import { useEffect, useRef, useState } from "react";
-import TextInput from "./components/TextInput";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -12,11 +11,11 @@ export default function Home() {
   const [toDo, setToDo] = useState("");
   const [editToDo, setEditToDo] = useState("");
   const [selectedIndex, setSelectedIndex] = useState("");
-  const [search, setSearch] = useState("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [inputFocus, setInputFocus] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [updateData, setUpdateData] = useState<Type.UpdateData>({});
+  const [keyword, setKeyword] = useState("");
   const editInputRef = useRef(undefined);
   const insertInputRef = useRef(undefined);
   const { data, isLoading, mutate } = useSWR<Type.ToDoList>(
@@ -38,8 +37,12 @@ export default function Home() {
   const handleMouseOut = () => {
     setIsHovering(false);
   };
+  
   const onDeleteClicked = (id: string) => {
-    setId(id);
+    if (confirm("do you want to delete?")) {
+      setId(id);
+    } else {
+    }
   };
 
   const handleMarkComplete = (id: string, isComplete: boolean) => {
@@ -52,7 +55,10 @@ export default function Home() {
   const onAddClicked = () => {
     if (!toDo) {
       alert("please input To Do field!");
-    } else if (data?.data && data?.data.some((v) => v.todo === toDo)) {
+    } else if (
+      data?.data &&
+      data?.data.some((v) => v.todo.toLowerCase() === toDo.toLowerCase())
+    ) {
       alert("duplicate item");
       insertInputRef.current.focus();
     } else {
@@ -67,12 +73,20 @@ export default function Home() {
           });
         }
       });
+      setKeyword("");
     }
   };
 
-  const onUpdateDataClicked = (id: string, todo: string) => {
-    console.log(data?.data.some((v) => v.todo === todo));
-    if (data?.data && data?.data.some((v) => v.todo === todo)) {
+  const onUpdateDataClicked = (
+    id: string,
+    todo: string,
+    previousname: string
+  ) => {
+    if (
+      data?.data &&
+      data?.data.some((v) => v.todo.toLowerCase() === todo.toLowerCase()) &&
+      previousname !== todo
+    ) {
       alert("duplicate item");
       editInputRef.current.focus();
     } else {
@@ -94,21 +108,20 @@ export default function Home() {
 
   useEffect(() => {
     if (data?.data) {
-      if (search) {
+      if (keyword) {
         const result = data.data.filter((v) =>
-          v.todo.toString().toLowerCase().match(search.toString().toLowerCase())
+          v.todo.toString().toLowerCase().match(keyword.toLowerCase())
         );
         setTaskData(result);
       } else {
         setTaskData(data.data);
       }
     }
-  }, [data, search]);
+  }, [data, keyword]);
 
   useEffect(() => {
     if (updateData) {
       if (updateData.todo) {
-        console.log("todo true");
         update({
           todo: updateData.todo,
         }).then((data) => {
@@ -144,21 +157,11 @@ export default function Home() {
     }
   }, [updateData]);
 
-  const regex = /[^\D]/g;
-
   return (
     <div>
       <div style={{ padding: "0px 1rem" }}>
         <h1 className={styles.logo}>ToDo App</h1>
         <div className={styles.headerWrapper}>
-          <div className={styles.searchWrapper}>
-            <TextInput
-              type={"text"}
-              placeholder="Search data here..."
-              value={search}
-              onChange={(e) => setSearch(e.currentTarget.value)}
-            />
-          </div>
           <div className={styles.formWrapper}>
             <div
               className={styles.nameWrapper}
@@ -183,7 +186,10 @@ export default function Home() {
                 }}
                 type={"text"}
                 value={toDo}
-                onChange={(e) => setToDo(e.currentTarget.value)}
+                onChange={(e) => {
+                  setKeyword(e.currentTarget.value);
+                  setToDo(e.currentTarget.value);
+                }}
               />
             </div>
             <div
@@ -204,114 +210,132 @@ export default function Home() {
         <div className={styles.grid}>
           {taskData.length > 0 ? (
             <>
-              {taskData.map((data) => (
-                <div
-                  className={styles.card}
-                  key={data.id}
-                  onMouseOver={handleMouseOver}
-                  onMouseOut={handleMouseOut}
-                >
-                  {data.isComplete && (
-                    <div className={styles.complete}>complete</div>
-                  )}
-                  <div style={{ flexDirection: "column" }}>
-                    {isEditing && selectedIndex === data.id ? (
-                      <div className={styles.editItem}>
-                        <input
-                          ref={editInputRef}
-                          autoFocus
-                          style={{
-                            backgroundColor: inputFocus ? "white" : undefined,
-                          }}
-                          onBlur={() => setInputFocus(false)}
-                          placeholder="Input To Do here..."
-                          onKeyDown={(e) => {
-                            if (e.code === "Enter") {
-                              onUpdateDataClicked(data.id, editToDo);
-                            }
-                          }}
-                          type={"text"}
-                          value={editToDo}
-                          onChange={(e) => setEditToDo(e.currentTarget.value)}
-                        />
-                        <div
-                          style={{ display: "inline-block", flexWrap: "wrap" }}
-                        >
+              {taskData
+                .sort((a, b) => Number(a.isComplete) - Number(b.isComplete))
+                .map((data) => (
+                  <div
+                    className={styles.card}
+                    key={data.id}
+                    onMouseOver={handleMouseOver}
+                    onMouseOut={handleMouseOut}
+                  >
+                    {data.isComplete && (
+                      <div className={styles.complete}>complete</div>
+                    )}
+                    <div style={{ flexDirection: "column" }}>
+                      {isEditing && selectedIndex === data.id ? (
+                        <div className={styles.editItem}>
+                          <input
+                            ref={editInputRef}
+                            autoFocus
+                            style={{
+                              backgroundColor: inputFocus ? "white" : undefined,
+                            }}
+                            onBlur={() => setInputFocus(false)}
+                            placeholder="Input To Do here..."
+                            onKeyDown={(e) => {
+                              if (e.code === "Enter") {
+                                onUpdateDataClicked(
+                                  data.id,
+                                  editToDo,
+                                  data.todo
+                                );
+                              }
+                            }}
+                            type={"text"}
+                            value={editToDo}
+                            onChange={(e) => setEditToDo(e.currentTarget.value)}
+                          />
                           <div
-                            style={{ marginLeft: 10 }}
-                            className={styles["btnDelete"]}
-                            onClick={() => {
-                              setIsEditing(false);
-                              setEditToDo("");
-                              setSelectedIndex("");
+                            style={{
+                              display: "inline-block",
+                              flexWrap: "wrap",
                             }}
                           >
-                            Cancel
-                          </div>
-                          <div
-                            style={{ marginLeft: 10 }}
-                            onClick={() =>
-                              onUpdateDataClicked(data.id, editToDo)
-                            }
-                            className={styles["btn"]}
-                          >
-                            Update
+                            <div
+                              style={{ marginLeft: 10 }}
+                              className={styles["btnDelete"]}
+                              onClick={() => {
+                                setIsEditing(false);
+                                setEditToDo("");
+                                setSelectedIndex("");
+                              }}
+                            >
+                              Cancel
+                            </div>
+                            <div
+                              style={{ marginLeft: 10 }}
+                              onClick={() =>
+                                onUpdateDataClicked(
+                                  data.id,
+                                  editToDo,
+                                  data.todo
+                                )
+                              }
+                              className={styles["btn"]}
+                            >
+                              Update
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <p style={{ marginTop: 10 }}>{data.todo || "No name"}</p>
-                    )}
-                    <div>{data.createAt}</div>
+                      ) : (
+                        <p style={{ marginTop: 10 }}>
+                          {data.todo || "No name"}
+                        </p>
+                      )}
+                      <div>{data.createAt}</div>
 
-                    <div
-                      className={
-                        isHovering
-                          ? `${styles.collapse} ${styles.showCollapse}`
-                          : styles.collapse
-                      }
-                      style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        marginTop: 10,
-                      }}
-                    >
                       <div
-                        onClick={() => {
-                          setIsEditing(true);
-                          setSelectedIndex(data.id);
-                          setEditToDo(data.todo);
-                        }}
-                        className={styles["btn"]}
-                      >
-                        Edit
-                      </div>
-                      <div
-                        style={{ marginLeft: 10 }}
-                        className={styles["btnDelete"]}
-                        onClick={() => onDeleteClicked(data.id)}
-                      >
-                        Remove
-                      </div>
-                      <div
-                        style={{ marginLeft: 10 }}
                         className={
-                          data.isComplete
-                            ? `${styles["btnMark"]} ${styles["btnMarkInCom"]}`
-                            : styles["btnMark"]
+                          isHovering
+                            ? `${styles.collapse} ${styles.showCollapse}`
+                            : styles.collapse
                         }
-                        onClick={() =>
-                          handleMarkComplete(data.id, !data.isComplete)
-                        }
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          marginTop: 10,
+                        }}
                       >
-                        {data.isComplete
-                          ? "Mark as Incomplete"
-                          : "Mark as Complete"}
+                        <div
+                          onClick={() => {
+                            setIsEditing(true);
+                            setSelectedIndex(data.id);
+                            setEditToDo(data.todo);
+                            if (isEditing) {
+                              setIsEditing(false);
+                            }
+                          }}
+                          className={styles["btn"]}
+                        >
+                          Edit
+                        </div>
+                        <div
+                          style={{ marginLeft: 10 }}
+                          className={styles["btnDelete"]}
+                          onClick={() => onDeleteClicked(data.id)}
+                        >
+                          Remove
+                        </div>
+                        <div
+                          style={{ marginLeft: 10 }}
+                          className={
+                            data.isComplete
+                              ? `${styles["btnMark"]} ${styles["btnMarkInCom"]}`
+                              : styles["btnMark"]
+                          }
+                          onClick={() =>
+                            handleMarkComplete(data.id, !data.isComplete)
+                          }
+                        >
+                          {data.isComplete
+                            ? "Mark as Incomplete"
+                            : "Mark as Complete"}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </>
           ) : (
             <div className={styles.noData}>

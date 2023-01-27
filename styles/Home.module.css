@@ -221,6 +221,7 @@ background-color: #ff3c3c;
 
 .grid {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
@@ -229,7 +230,8 @@ background-color: #ff3c3c;
 
 .card {
   position: relative;
-  margin: 1rem;
+  width: 90%;
+  margin: 2rem 1rem;
   flex-basis: 45%;
   padding: 1.5rem;
   text-align: left;
@@ -265,7 +267,6 @@ background-color: #ff3c3c;
 @media (max-width: 900px) {
   .grid {
     width: 100%;
-    flex-direction: column;
   }
   .card {
     width: 90%;
