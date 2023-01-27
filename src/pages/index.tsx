@@ -235,22 +235,28 @@ export default function Home() {
                           onChange={(e) => setEditToDo(e.currentTarget.value)}
                         />
                         <div
-                          style={{ marginLeft: 10 }}
-                          className={styles["btnDelete"]}
-                          onClick={() => {
-                            setIsEditing(false);
-                            setEditToDo("");
-                            setSelectedIndex("");
-                          }}
+                          style={{ display: "inline-block", flexWrap: "wrap" }}
                         >
-                          Cancel
-                        </div>
-                        <div
-                          style={{ marginLeft: 10 }}
-                          onClick={() => onUpdateDataClicked(data.id, editToDo)}
-                          className={styles["btn"]}
-                        >
-                          Update
+                          <div
+                            style={{ marginLeft: 10 }}
+                            className={styles["btnDelete"]}
+                            onClick={() => {
+                              setIsEditing(false);
+                              setEditToDo("");
+                              setSelectedIndex("");
+                            }}
+                          >
+                            Cancel
+                          </div>
+                          <div
+                            style={{ marginLeft: 10 }}
+                            onClick={() =>
+                              onUpdateDataClicked(data.id, editToDo)
+                            }
+                            className={styles["btn"]}
+                          >
+                            Update
+                          </div>
                         </div>
                       </div>
                     ) : (
